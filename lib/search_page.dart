@@ -1,11 +1,14 @@
+import 'package:aptasutra/app.dart';
+import 'package:aptasutra/aptasutra.dart';
 import 'package:aptasutra/main.dart';
+import 'package:aptasutra/utils.dart';
 import 'package:flutter/material.dart';
 
 class SearchPage extends StatefulWidget {
   final bool isStarredSearch;
-  final List<Aptasutra> quotes;
+  final List<Aptasutra> sutraList;
 
-  const SearchPage({super.key, required this.quotes, required this.isStarredSearch});
+  const SearchPage({super.key, required this.sutraList, required this.isStarredSearch});
 
   @override
   State<SearchPage> createState() => _SearchPageState();
@@ -19,7 +22,7 @@ class _SearchPageState extends State<SearchPage> {
 
     final isNumber = int.tryParse(query) != null;
 
-    return widget.quotes.asMap().entries.where((entry) {
+    return widget.sutraList.asMap().entries.where((entry) {
       if (isNumber) {
         return entry.value.n.toString().contains(query);
       }
@@ -47,17 +50,33 @@ class _SearchPageState extends State<SearchPage> {
                   setState(() => query = v);
                 },
               ),
+        actions: widget.isStarredSearch
+            ? [
+                IconButton(
+                  icon: const Icon(Icons.call_made),
+                  onPressed: () {
+                    Utils.shareAptasutra('Exported Aptasutra Starred List', App.starredList.join(','));
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.call_received),
+                  onPressed: () {
+                    _importStarredApsNoCsvDialog(context);
+                  },
+                ),
+              ]
+            : [],
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(20),
-        itemCount: widget.isStarredSearch ? widget.quotes.length : results.length,
+        itemCount: widget.isStarredSearch ? widget.sutraList.length : results.length,
         itemBuilder: (_, i) {
           int n = 0;
           String q = '';
 
           if (widget.isStarredSearch) {
-            n = widget.quotes[i].n;
-            q = widget.quotes[i].g;
+            n = widget.sutraList[i].n;
+            q = widget.sutraList[i].g;
           } else {
             n = results[i].value.n;
             q = results[i].value.g;
@@ -90,6 +109,47 @@ class _SearchPageState extends State<SearchPage> {
           );
         },
       ),
+    );
+  }
+
+  void _importStarredApsNoCsvDialog(BuildContext context) {
+    final TextEditingController controller = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Enter Comma Separated Aptasutra Numbers'),
+          content: TextField(
+            controller: controller,
+            decoration: const InputDecoration(hintText: 'Type something...'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // close dialog
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final value = controller.text;
+                debugPrint('Entered value: $value'); // ✅ log output
+                try {
+                  App.starredList = value.split(',').map((e) => int.parse(e.trim())).toList();
+                  App.setStarredList();
+                  await App.loadQuotes();
+                } catch (e) {
+                  debugPrint('Error parsing input: $e'); // ✅ log output
+                }
+
+                Navigator.pop(context);
+              },
+              child: const Text('Submit'),
+            ),
+          ],
+        );
+      },
     );
   }
 

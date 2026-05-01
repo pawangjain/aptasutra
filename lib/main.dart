@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:aptasutra/app.dart';
+import 'package:aptasutra/aptasutra.dart';
 import 'package:aptasutra/search_page.dart';
 import 'package:aptasutra/star_button.dart';
 import 'package:aptasutra/utils.dart';
@@ -22,18 +23,6 @@ class AptasutraApp extends StatelessWidget {
   }
 }
 
-class Aptasutra {
-  final int n;
-  final String g;
-  bool isStarred;
-
-  Aptasutra({required this.n, required this.g, required this.isStarred});
-
-  factory Aptasutra.fromJson(Map<String, dynamic> json) {
-    return Aptasutra(n: json['n'], g: json['g'], isStarred: App.starredList.contains(json['n']));
-  }
-}
-
 class AptasutraScreen extends StatefulWidget {
   const AptasutraScreen({super.key});
 
@@ -44,8 +33,7 @@ class AptasutraScreen extends StatefulWidget {
 class _AptasutraScreenState extends State<AptasutraScreen> {
   final PageController _controller = PageController();
 
-  List<Aptasutra> quotes = [];
-  int currentIndex = 0;
+  
 
   static const double _fontSize = 28;
 
@@ -59,17 +47,11 @@ class _AptasutraScreenState extends State<AptasutraScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await App.initApp();
-      loadQuotes();
-    });
-  }
-
-  Future<void> loadQuotes() async {
-    final jsonString = await rootBundle.loadString('assets/aptasutra.json');
-
-    final List data = json.decode(jsonString);
-
-    setState(() {
-      quotes = data.map((e) => Aptasutra.fromJson(e)).toList();
+      await App.loadQuotes();
+      setState(() {});
+      int lastViewedNo = await App.getLastViewedAptasutraNo();
+      await Future.delayed(const Duration(milliseconds: 900));
+      goToQuote(lastViewedNo);
     });
   }
 
@@ -78,22 +60,22 @@ class _AptasutraScreenState extends State<AptasutraScreen> {
   }
 
   void goToPrevious() {
-    _controller.animateToPage(currentIndex - 1, duration: const Duration(milliseconds: 300), curve: Curves.ease);
+    _controller.animateToPage(App.currentIndex - 1, duration: const Duration(milliseconds: 300), curve: Curves.ease);
   }
 
   void goToNext() {
-    _controller.animateToPage(currentIndex + 1, duration: const Duration(milliseconds: 300), curve: Curves.ease);
+    _controller.animateToPage(App.currentIndex + 1, duration: const Duration(milliseconds: 300), curve: Curves.ease);
   }
 
   void randomQuote() {
-    final index = Random().nextInt(quotes.length);
+    final index = Random().nextInt(App.sutraList.length);
     goToQuote(index);
   }
 
   Future<void> openSearch() async {
     final result = await Navigator.push<int>(
       context,
-      MaterialPageRoute(builder: (_) => SearchPage(quotes: quotes, isStarredSearch: false)),
+      MaterialPageRoute(builder: (_) => SearchPage(sutraList: App.sutraList, isStarredSearch: false)),
     );
 
     if (result != null) {
@@ -105,7 +87,7 @@ class _AptasutraScreenState extends State<AptasutraScreen> {
     final result = await Navigator.push<int>(
       context,
       MaterialPageRoute(
-        builder: (_) => SearchPage(quotes: quotes.where((u) => u.isStarred).toList(), isStarredSearch: true),
+        builder: (_) => SearchPage(sutraList: App.sutraList.where((u) => u.isStarred).toList(), isStarredSearch: true),
       ),
     );
 
@@ -116,7 +98,7 @@ class _AptasutraScreenState extends State<AptasutraScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (quotes.isEmpty) {
+    if (App.sutraList.isEmpty) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
@@ -130,53 +112,61 @@ class _AptasutraScreenState extends State<AptasutraScreen> {
             PageView.builder(
               controller: _controller,
               onPageChanged: (i) {
-                setState(() => currentIndex = i);
+                setState(() {
+                  App.currentIndex = i;
+                  App.setLastViewedAptasutraNo(App.currentIndex);
+                });
               },
-              itemCount: quotes.length,
+              itemCount: App.sutraList.length,
               itemBuilder: (_, index) {
-                final q = quotes[index];
+                final q = App.sutraList[index];
 
                 return Padding(
                   padding: const EdgeInsets.all(14),
                   child: Container(
                     decoration: BoxDecoration(color: const Color(0xFF2D2D2D), borderRadius: BorderRadius.circular(20)),
                     padding: const EdgeInsets.all(14),
-                    child: Column(
-                      children: [
-                        Expanded(
-                          child: Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                SelectableText(
-                                  q.g + tt,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(fontSize: _fontSize, height: 1.8),
-                                ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return SingleChildScrollView(
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                            child: IntrinsicHeight(
+                              child: Center(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        SelectableText('#${q.n}', style: TextStyle(fontSize: 20, color: dividerColor)),
-
-                                        StarButton(aptasutra: q),
-                                      ],
+                                    SelectableText(
+                                      q.g + tt,
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(fontSize: _fontSize, height: 1.8),
                                     ),
-                                    const SelectableText(
-                                      '~ દાદા ભગવાન',
-                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            SelectableText(
+                                              '#${q.n}',
+                                              style: TextStyle(fontSize: 20, color: dividerColor),
+                                            ),
+                                            StarButton(aptasutra: q),
+                                          ],
+                                        ),
+                                        const SelectableText(
+                                          '~ દાદા ભગવાન',
+                                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
-                              ],
+                              ),
                             ),
                           ),
-                        ),
-
-                        // const Divider(),
-                      ],
+                        );
+                      },
                     ),
                   ),
                 );
@@ -256,7 +246,7 @@ class _AptasutraScreenState extends State<AptasutraScreen> {
   }
 
   void shareAptasutra() {
-    Utils.shareAptasutra('Aptasutra #${quotes[currentIndex].n}', '${quotes[currentIndex].g} ~ દાદા ભગવાન');
+    Utils.shareAptasutra('Aptasutra #${App.sutraList[App.currentIndex].n}', '${App.sutraList[App.currentIndex].g} ~ દાદા ભગવાન');
   }
 }
 
