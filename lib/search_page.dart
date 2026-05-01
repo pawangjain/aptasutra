@@ -1,6 +1,5 @@
 import 'package:aptasutra/app.dart';
 import 'package:aptasutra/aptasutra.dart';
-import 'package:aptasutra/main.dart';
 import 'package:aptasutra/utils.dart';
 import 'package:flutter/material.dart';
 
@@ -52,6 +51,7 @@ class _SearchPageState extends State<SearchPage> {
               ),
         actions: widget.isStarredSearch
             ? [
+                Text(widget.sutraList.length.toString() + ' ', style: const TextStyle(fontSize: 18)),
                 IconButton(
                   icon: const Icon(Icons.call_made),
                   onPressed: () {
@@ -65,7 +65,7 @@ class _SearchPageState extends State<SearchPage> {
                   },
                 ),
               ]
-            : [],
+            : [Text(results.length.toString() + ' ', style: const TextStyle(fontSize: 18))],
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(20),
@@ -90,7 +90,7 @@ class _SearchPageState extends State<SearchPage> {
             child: Container(
               margin: const EdgeInsets.only(bottom: 16),
               padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(color: const Color(0xFF1C1C1C), borderRadius: BorderRadius.circular(16)),
+              decoration: BoxDecoration(color: const Color(0xFF2D2D2D), borderRadius: BorderRadius.circular(16)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -122,7 +122,15 @@ class _SearchPageState extends State<SearchPage> {
           title: const Text('Enter Comma Separated Aptasutra Numbers'),
           content: TextField(
             controller: controller,
-            decoration: const InputDecoration(hintText: 'Type something...'),
+            decoration: const InputDecoration(
+              hintText: 'Starred Aptasutra Numbers CSV (e.g. 1,5,9)',
+              border: OutlineInputBorder(), // default
+              enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
+              focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.blue, width: 2)),
+            ),
+            minLines: 10,
+            maxLines: null, // allows it to grow beyond 10 lines
+            autofocus: true,
           ),
           actions: [
             TextButton(
@@ -133,17 +141,40 @@ class _SearchPageState extends State<SearchPage> {
             ),
             ElevatedButton(
               onPressed: () async {
-                final value = controller.text;
-                debugPrint('Entered value: $value'); // ✅ log output
-                try {
-                  App.starredList = value.split(',').map((e) => int.parse(e.trim())).toList();
-                  App.setStarredList();
-                  await App.loadQuotes();
-                } catch (e) {
-                  debugPrint('Error parsing input: $e'); // ✅ log output
-                }
+                final value = controller.text.trim();
 
-                Navigator.pop(context);
+                debugPrint('Entered value: $value'); // ✅ log output
+
+                if (value.isEmpty) return;
+
+                // 👉 show confirmation dialog
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: const Text('Confirm'),
+                      content: Text('Are you sure you want to overwrite the current starred list?\n\n$value'),
+                      actions: [
+                        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('No')),
+                        ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Yes')),
+                      ],
+                    );
+                  },
+                );
+
+                if (confirm == true) {
+                  try {
+                    App.starredList = value.split(',').map((e) => int.parse(e.trim())).toList();
+                    App.setStarredList();
+                    await App.loadQuotes();
+                  } catch (e) {
+                    debugPrint('Error parsing input: $e'); // ✅ log output
+                  }
+
+                  Navigator.pop(context);
+                  Navigator.pop(context);
+                  // rebuild home screen to reflect changes
+                }
               },
               child: const Text('Submit'),
             ),

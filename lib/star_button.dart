@@ -18,7 +18,7 @@ class _StarButtonState extends State<StarButton> {
     return IconButton(
       icon: Icon(
         widget.aptasutra.isStarred ? Icons.star : Icons.star_border,
-        color: widget.aptasutra.isStarred ? Colors.yellow : Colors.grey,
+        color: widget.aptasutra.isStarred ? Colors.orange : Colors.grey,
       ),
       onPressed: () => toggleStarredStatus(widget.aptasutra),
     );
@@ -26,13 +26,13 @@ class _StarButtonState extends State<StarButton> {
 
   toggleStarredStatus(Aptasutra q) {
     setState(() {
-    q.isStarred = !q.isStarred;
+      q.isStarred = !q.isStarred;
 
-    if (q.isStarred) {
-      App.addToStarredList(q.n);
-    } else {
-      App.removeFromStarredList(q.n);
-    }
+      if (q.isStarred) {
+        App.addToStarredList(q.n);
+      } else {
+        App.removeFromStarredList(q.n);
+      }
     });
   }
 }
