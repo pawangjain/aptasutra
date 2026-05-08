@@ -1,5 +1,6 @@
 import 'package:aptasutra/app.dart';
 import 'package:aptasutra/aptasutra.dart';
+import 'package:aptasutra/constants.dart';
 import 'package:aptasutra/utils.dart';
 import 'package:flutter/material.dart';
 
@@ -90,7 +91,7 @@ class _SearchPageState extends State<SearchPage> {
             child: Container(
               margin: const EdgeInsets.only(bottom: 16),
               padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(color: const Color(0xFF2D2D2D), borderRadius: BorderRadius.circular(16)),
+              decoration: BoxDecoration(color: Constants.cardColor, borderRadius: BorderRadius.circular(16)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -99,7 +100,7 @@ class _SearchPageState extends State<SearchPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('#${n}', style: TextStyle(fontSize: 22)),
+                      Text('${n}', style: TextStyle(fontSize: 20, color: Theme.of(context).dividerColor)),
                       const Text('~ દાદા ભગવાન', style: TextStyle(fontSize: 22)),
                     ],
                   ),

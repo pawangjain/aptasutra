@@ -4,6 +4,8 @@ import 'dart:math';
 import 'package:aptasutra/app.dart';
 import 'package:aptasutra/aptasutra.dart';
 import 'package:aptasutra/aptasutra_screen.dart';
+import 'package:aptasutra/constants.dart';
+import 'package:aptasutra/gallery_screen.dart';
 import 'package:aptasutra/search_page.dart';
 import 'package:aptasutra/star_button.dart';
 import 'package:aptasutra/utils.dart';
@@ -78,6 +80,10 @@ class _AptasutraScreenState extends State<AptasutraScreen> {
     }
   }
 
+  Future<void> openGallery() async {
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => GalleryScreen()));
+  }
+
   @override
   Widget build(BuildContext context) {
     if (App.sutraList.isEmpty) {
@@ -106,8 +112,8 @@ class _AptasutraScreenState extends State<AptasutraScreen> {
                 return Padding(
                   padding: const EdgeInsets.all(14),
                   child: Container(
-                    decoration: BoxDecoration(color: const Color(0xFF2D2D2D), borderRadius: BorderRadius.circular(20)),
-                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(color: Constants.cardColor, borderRadius: BorderRadius.circular(20)),
+                    padding: const EdgeInsets.all(18),
                     child: LayoutBuilder(
                       builder: (context, constraints) {
                         return SingleChildScrollView(
@@ -123,24 +129,33 @@ class _AptasutraScreenState extends State<AptasutraScreen> {
                                       textAlign: TextAlign.center,
                                       style: const TextStyle(fontSize: _fontSize, height: 1.8),
                                     ),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            SelectableText(
-                                              '#${q.n}',
-                                              style: TextStyle(fontSize: 20, color: dividerColor),
-                                            ),
-                                            StarButton(aptasutra: q),
-                                          ],
-                                        ),
-                                        const SelectableText(
-                                          '~ દાદા ભગવાન',
-                                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28),
-                                        ),
-                                      ],
+                                    SizedBox(height: 12),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 5),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              SelectableText(
+                                                // '#${q.n}',
+                                                '${q.n}',
+                                                style: TextStyle(
+                                                  fontSize: 22,
+                                                  color: dividerColor,
+                                                  // fontStyle: FontStyle.italic,
+                                                ),
+                                              ),
+                                              StarButton(aptasutra: q),
+                                            ],
+                                          ),
+                                          const SelectableText(
+                                            '~ દાદા ભગવાન',
+                                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -153,6 +168,19 @@ class _AptasutraScreenState extends State<AptasutraScreen> {
                   ),
                 );
               },
+            ),
+
+            Positioned(
+              top: 8,
+              left: 8,
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: openGallery,
+                    icon: Icon(Icons.image_outlined, color: Theme.of(context).dividerColor),
+                  ),
+                ],
+              ),
             ),
 
             Positioned(
@@ -239,18 +267,18 @@ class LinkText extends StatelessWidget {
   final String url = "https://www.dadabhagwan.org";
 
   Future<void> _launchUrl() async {
-    final Uri uri = Uri.parse(url);
+    // final Uri uri = Uri.parse(url);
 
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      throw 'Could not launch $url';
-    }
+    // if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+    //   throw 'Could not launch $url';
+    // }
   }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: _launchUrl,
-      child: Text('dadabhagwan.org', style: TextStyle(color: Colors.blue[300], fontSize: 16)),
+      child: Text('dadabhagwan.org', style: TextStyle(color: const Color.fromARGB(255, 100, 100, 100), fontSize: 13.5)),
     );
   }
 }
